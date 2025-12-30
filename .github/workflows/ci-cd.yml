@@ -1,0 +1,44 @@
+name: CI/CD Usuarios
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY_NAME: fiapcloudgamesacr1
+  IMAGE_NAME: fiapcloudgames-usuarios
+  APP_NAME: fiapcloudgames-usuarios-app 
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Login no Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build e Push da imagem Docker
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ env.REGISTRY_NAME }}.azurecr.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          docker build -t ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+          docker push ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy para Azure Container App
+        run: |
+          az containerapp update \
+            --name ${{ env.APP_NAME }} \
+            --resource-group fiapcloudgames-rg \
+            --image ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
