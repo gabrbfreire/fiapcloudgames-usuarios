@@ -8,7 +8,7 @@ on:
 env:
   REGISTRY_NAME: fiapcloudgamesacr1
   IMAGE_NAME: fiapcloudgames-usuarios
-  APP_NAME: fiapcloudgames-usuarios-app 
+  APP_NAME: fiapcloudgames-usuarios-api
 
 jobs:
   build_and_deploy:
